@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COC Color Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full space-y-6">
+        <h1 class="text-2xl font-bold text-center text-gray-800">COC Color Converter</h1>
+        <p class="text-center text-gray-600">Enter two characters to see the corresponding color in RGB565 format.</p>
+
+        <!-- Input and Display Section -->
+        <div class="space-y-4">
+            <div class="flex flex-col">
+                <label for="char1" class="text-sm font-medium text-gray-700 mb-1">First Character</label>
+                <input type="text" id="char1" maxlength="1" class="p-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+            </div>
+            <div class="flex flex-col">
+                <label for="char2" class="text-sm font-medium text-gray-700 mb-1">Second Character</label>
+                <input type="text" id="char2" maxlength="1" class="p-3 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+            </div>
+
+            <!-- Color Display and Info -->
+            <div class="flex items-center justify-center space-x-4">
+                <div id="colorBox" class="w-24 h-24 rounded-lg border-2 border-gray-300 shadow-inner"></div>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4 text-center">
+                <p class="text-sm text-gray-600 mb-1">RGB565 Code:</p>
+                <code id="rgb565Code" class="text-base font-mono text-gray-800 font-semibold">0x0000</code>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4 text-center">
+                <p class="text-sm text-gray-600 mb-1">RGB Value:</p>
+                <code id="rgbValue" class="text-base font-mono text-gray-800 font-semibold">(0, 0, 0)</code>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const char1Input = document.getElementById('char1');
+        const char2Input = document.getElementById('char2');
+        const colorBox = document.getElementById('colorBox');
+        const rgb565Code = document.getElementById('rgb565Code');
+        const rgbValue = document.getElementById('rgbValue');
+
+        // Function to convert ASCII chars to an RGB565 hex value
+        function charsToRGB565(char1, char2) {
+            if (char1 && char2) {
+                const ascii1 = char1.charCodeAt(0);
+                const ascii2 = char2.charCodeAt(0);
+                // Combine the two 8-bit ASCII values into a single 16-bit number.
+                // Shifting ascii1 8 bits to the left makes it the high byte,
+                // and the bitwise OR with ascii2 adds it as the low byte.
+                const hexValue = (ascii1 << 8) | ascii2;
+                return hexValue;
+            }
+            return 0;
+        }
+
+        // Function to convert an RGB565 hex value to RGB (0-255)
+        function rgb565ToRgb(hexValue) {
+            // The RGB565 format uses 16 bits: 5 for Red, 6 for Green, 5 for Blue.
+            // RRRRRGGGGGGBBBBB
+            
+            // Extract the 5 Red bits (most significant)
+            const red = (hexValue & 0xF800) >> 11;
+            // Extract the 6 Green bits (middle)
+            const green = (hexValue & 0x07E0) >> 5;
+            // Extract the 5 Blue bits (least significant)
+            const blue = hexValue & 0x001F;
+            
+            // Convert to 8-bit RGB by scaling the values
+            // 5-bit Red (0-31) to 8-bit (0-255)
+            const r = Math.round(red * (255 / 31));
+            // 6-bit Green (0-63) to 8-bit (0-255)
+            const g = Math.round(green * (255 / 63));
+            // 5-bit Blue (0-31) to 8-bit (0-255)
+            const b = Math.round(blue * (255 / 31));
+            
+            return { r, g, b };
+        }
+
+        // Update the display with the new color and values
+        function updateDisplay() {
+            const char1 = char1Input.value.trim();
+            const char2 = char2Input.value.trim();
+
+            const hexValue = charsToRGB565(char1, char2);
+            const { r, g, b } = rgb565ToRgb(hexValue);
+
+            const hexString = '0x' + hexValue.toString(16).padStart(4, '0').toUpperCase();
+            
+            colorBox.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            rgb565Code.textContent = hexString;
+            rgbValue.textContent = `(${r}, ${g}, ${b})`;
+        }
+
+        // Add event listeners for input changes
+        char1Input.addEventListener('input', updateDisplay);
+        char2Input.addEventListener('input', updateDisplay);
+
+        // Initial update
+        updateDisplay();
+    </script>
+</body>
+</html>
+
